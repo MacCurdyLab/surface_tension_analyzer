@@ -12,7 +12,7 @@
 % Continuous Image capture GUI for Surface Tension setup
 % =========================================================
 
-%%
+%% test 
 function imageCaptureGUI()
 
 % clear;
