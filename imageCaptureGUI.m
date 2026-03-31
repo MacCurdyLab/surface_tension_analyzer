@@ -385,7 +385,7 @@ end
         % Post-Process the image to write to disk
 
         % The MACLab setup has the camera rotated 90degrees.
-        % This rotates the image to be upright while saving
+        % This rotates the image to be upright (needle facing down) while saving
         rotated = imrotate(img, 90, 'bilinear');
         grayImg = rgb2gray(rotated);
 
