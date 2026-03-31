@@ -379,7 +379,7 @@ end
 
         % The MACLab setup has the camera rotated 90degrees.
         % This rotates the image to be upright while saving
-        rotated = imrotate(img, -90, 'bilinear');
+        rotated = imrotate(img, 90, 'bilinear');
         grayImg = rgb2gray(rotated);
 
         %Gaussian blur to smoothen edges
