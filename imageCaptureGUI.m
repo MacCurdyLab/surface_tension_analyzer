@@ -269,6 +269,7 @@ end
    % pause(1);
     fig = gcf;
     data = getappdata(fig, 'data');
+    previewTimer = getappdata(fig, 'PreviewTimer');
    % updatePreview(cam,previewAxes);
    updateLive(cam,live_view);
 
@@ -279,6 +280,7 @@ end
     needleGa = get(needleGAEdit, 'String'); % Needle Gauge to create name and ref. directory
 
 
+    stop(previewTimer);
     % Clear previous thumbnails
     delete(get(data.thumbnailPanel, 'Children'));
 
@@ -359,11 +361,16 @@ end
     end
 
     setappdata(fig, 'data', data);
+    start(previewTimer);
 end
 
 
 % This function makes the Thumbnail to be a clickable button to save
     function thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter)
+        fig = gcf;
+        previewTimer = getappdata(fig, 'PreviewTimer');
+        stop(previewTimer);
+
         % Get image data
         userData = get(src, 'UserData');
         img = userData.image;
@@ -436,6 +443,7 @@ end
        
         % Highlight saved thumbnail
         set(src, 'BackgroundColor', [0.0 1 0.5]);
+        start(previewTimer);
 
         % Show confirmation that the image has been saved
        % save_msg= msgbox(strcat('Saved',filename_final), 'Image','replace')
