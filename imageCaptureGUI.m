@@ -438,9 +438,9 @@ end
         set(src, 'BackgroundColor', [0.0 1 0.5]);
 
         % Show confirmation that the image has been saved
-       save_msg= msgbox(strcat('Saved',filename_final), 'Image','replace');
- 
-        set(save_msg, 'position', [500 500 150 50]);
+       % save_msg= msgbox(strcat('Saved',filename_final), 'Image','replace')
+       % set(save_msg, 'position', [500 500 150 50]);
+       disp(['Saved: ' filename_final]);
       % msg_temp=get(save_msg,'CurrentAxes');
       % msg_fnt=get(msg_temp,'Children');
       % set(msg_fnt,'FontSize',10);
