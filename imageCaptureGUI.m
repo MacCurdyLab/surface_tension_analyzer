@@ -22,7 +22,7 @@ close all;
     
     AspectRatio=[16 9]; %Specify the Aspect Ratio. Default is with a 1080p cam of 16:9
 
-    cam = webcam(); % Initialize the camera object
+    cam = webcam('USB Camera'); % Initialize the camera object
   
     cam.Resolution = '1920x1080'; % Edit based on your specific webcam
 
