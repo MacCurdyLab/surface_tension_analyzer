@@ -266,6 +266,9 @@ end
 
     function captureCallback(~, ~, ~)
 
+    previewTimer = getappdata(fig, 'PreviewTimer');
+    stop(previewTimer);
+   
    % pause(1);
     fig = gcf;
     data = getappdata(fig, 'data');
@@ -359,6 +362,7 @@ end
     end
 
     setappdata(fig, 'data', data);
+    start(previewTimer);    
 end
 
 
