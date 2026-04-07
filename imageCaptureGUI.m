@@ -22,20 +22,20 @@ close all;
     
     AspectRatio=[16 9]; %Specify the Aspect Ratio. Default is with a 1080p cam of 16:9
 
-    cam = webcam(); % Initialize the camera object
+    cam = webcam('USB Camera'); % Initialize the camera object
   
     cam.Resolution = '1920x1080'; % Edit based on your specific webcam
 
     cam.ExposureMode="manual"; % Set to Manual exposure to keep it consistent
-    
+
     cam.Exposure=-7; % Goes from -13 to 0 -- darkest to highest
-    
+
     cam.BacklightCompensation=1; % 1 is default. 0 turns it off
     
     cam.Contrast=64; % Goes from 0 to 64 on MACLab camera model
-    
+
     cam.Brightness=0; % Goes from 0 to 64 on MACLab camera model
-    
+
     cam.Sharpness=2; %Sharpness goes from 0 to 6. Default = 3
 
 %% The GUI is created in the following section
@@ -103,7 +103,13 @@ close all;
   uicontrol('Style', 'text', ...
              'Position', [5 170 180 25], ...
              'String', 'Needle Gauge:','FontSize',11,'FontWeight','bold','HorizontalAlignment','right');
- % Get Needle Gauge from the user-input
+ 
+  saveStatusText = uicontrol('Style', 'text', ...
+         'Position', [1050 30 400 20], ...
+         'String', '','FontSize',11,'FontWeight','bold', ...
+         'ForegroundColor',[0 0.6 0],'HorizontalAlignment','left');
+  
+  % Get Needle Gauge from the user-input
   needleGAEdit = uicontrol('Style', 'edit', ...
                           'Position', [190 170 30 25], ...
                           'String', '15','FontSize',11,'HorizontalAlignment','left');
@@ -269,6 +275,7 @@ end
    % pause(1);
     fig = gcf;
     data = getappdata(fig, 'data');
+    previewTimer = getappdata(fig, 'PreviewTimer');
    % updatePreview(cam,previewAxes);
    updateLive(cam,live_view);
 
@@ -279,6 +286,7 @@ end
     needleGa = get(needleGAEdit, 'String'); % Needle Gauge to create name and ref. directory
 
 
+    stop(previewTimer);
     % Clear previous thumbnails
     delete(get(data.thumbnailPanel, 'Children'));
 
@@ -349,7 +357,8 @@ end
         set(thumbBtn, 'CData', thumbImg);
 
         % Set callback
-        set(thumbBtn, 'Callback', @(src,~,~,~,~)thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter));
+        %set(thumbBtn, 'Callback', @(src,~,~,~,~)thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter));
+        set(thumbBtn, 'Callback', @(src,~,~,~,~)thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter, saveStatusText));
 
         % Add tooltip for full filename [[3]]
         set(thumbBtn, 'TooltipString', filename);
@@ -359,11 +368,16 @@ end
     end
 
     setappdata(fig, 'data', data);
+    start(previewTimer);
 end
 
 
 % This function makes the Thumbnail to be a clickable button to save
-    function thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter)
+    function thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter, saveStatusText)
+        fig = gcf;
+        previewTimer = getappdata(fig, 'PreviewTimer');
+        stop(previewTimer);
+
         % Get image data
         userData = get(src, 'UserData');
         img = userData.image;
@@ -378,8 +392,8 @@ end
         % Post-Process the image to write to disk
 
         % The MACLab setup has the camera rotated 90degrees.
-        % This rotates the image to be upright while saving
-        rotated = imrotate(img, -90, 'bilinear');
+        % This rotates the image to be upright (needle facing down) while saving
+        rotated = imrotate(img, 90, 'bilinear');
         grayImg = rgb2gray(rotated);
 
         %Gaussian blur to smoothen edges
@@ -436,11 +450,13 @@ end
        
         % Highlight saved thumbnail
         set(src, 'BackgroundColor', [0.0 1 0.5]);
+        start(previewTimer);
 
         % Show confirmation that the image has been saved
-       save_msg= msgbox(strcat('Saved',filename_final), 'Image','replace');
- 
-        set(save_msg, 'position', [500 500 150 50]);
+       % save_msg= msgbox(strcat('Saved',filename_final), 'Image','replace')
+       % set(save_msg, 'position', [500 500 150 50]);
+       disp(['Saved: ' filename_final]);
+       set(saveStatusText, 'String', ['Saved: ' filename_final]);
       % msg_temp=get(save_msg,'CurrentAxes');
       % msg_fnt=get(msg_temp,'Children');
       % set(msg_fnt,'FontSize',10);
