@@ -27,15 +27,15 @@ close all;
     cam.Resolution = '1920x1080'; % Edit based on your specific webcam
 
     cam.ExposureMode="manual"; % Set to Manual exposure to keep it consistent
-    
+
     cam.Exposure=-7; % Goes from -13 to 0 -- darkest to highest
-    
+
     cam.BacklightCompensation=1; % 1 is default. 0 turns it off
     
     cam.Contrast=64; % Goes from 0 to 64 on MACLab camera model
-    
+
     cam.Brightness=0; % Goes from 0 to 64 on MACLab camera model
-    
+
     cam.Sharpness=2; %Sharpness goes from 0 to 6. Default = 3
 
 %% The GUI is created in the following section
@@ -103,7 +103,13 @@ close all;
   uicontrol('Style', 'text', ...
              'Position', [5 170 180 25], ...
              'String', 'Needle Gauge:','FontSize',11,'FontWeight','bold','HorizontalAlignment','right');
- % Get Needle Gauge from the user-input
+ 
+  saveStatusText = uicontrol('Style', 'text', ...
+         'Position', [1050 30 400 20], ...
+         'String', '','FontSize',11,'FontWeight','bold', ...
+         'ForegroundColor',[0 0.6 0],'HorizontalAlignment','left');
+  
+  % Get Needle Gauge from the user-input
   needleGAEdit = uicontrol('Style', 'edit', ...
                           'Position', [190 170 30 25], ...
                           'String', '15','FontSize',11,'HorizontalAlignment','left');
@@ -351,7 +357,8 @@ end
         set(thumbBtn, 'CData', thumbImg);
 
         % Set callback
-        set(thumbBtn, 'Callback', @(src,~,~,~,~)thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter));
+        %set(thumbBtn, 'Callback', @(src,~,~,~,~)thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter));
+        set(thumbBtn, 'Callback', @(src,~,~,~,~)thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter, saveStatusText));
 
         % Add tooltip for full filename [[3]]
         set(thumbBtn, 'TooltipString', filename);
@@ -366,7 +373,7 @@ end
 
 
 % This function makes the Thumbnail to be a clickable button to save
-    function thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter)
+    function thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter, saveStatusText)
         fig = gcf;
         previewTimer = getappdata(fig, 'PreviewTimer');
         stop(previewTimer);
@@ -449,6 +456,7 @@ end
        % save_msg= msgbox(strcat('Saved',filename_final), 'Image','replace')
        % set(save_msg, 'position', [500 500 150 50]);
        disp(['Saved: ' filename_final]);
+       set(saveStatusText, 'String', ['Saved: ' filename_final]);
       % msg_temp=get(save_msg,'CurrentAxes');
       % msg_fnt=get(msg_temp,'Children');
       % set(msg_fnt,'FontSize',10);
