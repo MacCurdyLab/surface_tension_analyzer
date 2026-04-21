@@ -461,14 +461,17 @@ end
 
         
         % Generate Image Full Paths and Save images using imwrite()
-        ImgSaveFinal=strcat(ImgSaveDir,'\',filename_final);
+        %ImgSaveFinal=strcat(ImgSaveDir,'\',filename_final);
+        ImgSaveFinal = fullfile(ImgSaveDir, filename_final);
         imwrite(img_enhanced, ImgSaveFinal, "tif",'Compression','none');
         %imwrite(adjusted_tempImg, ImgSaveFinal, "tif",'Compression','none');
         
-        ImgSaveRAW=strcat(RawSaveDir,'\',filename_RGB);
+        %ImgSaveRAW=strcat(RawSaveDir,'\',filename_RGB);
+        ImgSaveRAW   = fullfile(RawSaveDir, filename_RGB);
         imwrite(RGB_sharpened, ImgSaveRAW, "tif",'Compression','none');
         
-        ImgSaveBW=strcat(RawSaveDir,'\',filename_BW);
+        %ImgSaveBW=strcat(RawSaveDir,'\',filename_BW);
+        ImgSaveBW    = fullfile(RawSaveDir, filename_BW);
         imwrite(adjusted_tempImg, ImgSaveBW, "tif",'Compression','none');
        
         % Highlight saved thumbnail
