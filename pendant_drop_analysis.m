@@ -13,7 +13,7 @@
 % =========================================================
 
 %%
-function pendant_drop_analysis(folder)
+function pendant_drop_analysis(folder, needleGauge)
     if nargin < 1 || isempty(folder)
         folder = uigetdir('Select folder containing .tif images');
         if folder == 0
@@ -146,6 +146,16 @@ function pendant_drop_analysis(folder)
         end
     end
     
+    gaugeTable = containers.Map( ...
+    {14,15,16,17,18,19,20,21,22,23,24,25,26,27,28}, ...
+    {2108,1829,1651,1473,1270,1067,908,819,718,641,566,514,464,413,362});
+    
+    if isKey(gaugeTable, needleGauge)
+        default_width = num2str(gaugeTable(needleGauge));
+    else
+        default_width = '1000';
+    end
+
     % Get physical needle width with larger font
     prompt = {'\fontsize{12}Enter actual needle width (microns):'};
     dims = [1 100];

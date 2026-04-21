@@ -392,7 +392,7 @@ function runAnalysisCallback(~, ~)
         return
     end
 
-    pendant_drop_analysis(imgFolder);
+    pendant_drop_analysis(imgFolder, str2double(needleGa));
 end
 
 
