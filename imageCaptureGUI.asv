@@ -380,22 +380,10 @@ end
 end
 
 
-%AnalysisCallback
-function runAnalysisCallback(~, ~)
-    prefix   = get(prefixEdit,   'String');
-    needleGa = get(needleGAEdit, 'String');
-    imgFolder = fullfile(pwd, 'Outputs', prefix, strcat(needleGa, 'Ga'), 'Images');
-
-    if ~isfolder(imgFolder)
-        errordlg(['No saved images found at: ' imgFolder], 'Folder Not Found');
-        return
-    end
-
-    pendant_drop_analysis(imgFolder);
-end
 
 
 % This function makes the Thumbnail to be a clickable button to save
+
     function thumbnailCallback(src, prefixEdit, needleGAEdit, preview_thresh, preview_filter, saveStatusText)
         fig = gcf;
         previewTimer = getappdata(fig, 'PreviewTimer');

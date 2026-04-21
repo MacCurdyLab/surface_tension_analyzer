@@ -13,11 +13,12 @@
 % =========================================================
 
 %%
-function pendant_drop_analysis()
-    % Get directory containing .tif images
-    folder = uigetdir('Select folder containing .tif images');
-    if folder == 0
-        return
+function pendant_drop_analysis(folder)
+    if nargin < 1 || isempty(folder)
+        folder = uigetdir('Select folder containing .tif images');
+        if folder == 0
+            return
+        end
     end
     
     % Get list of .tif files
