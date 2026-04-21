@@ -153,14 +153,14 @@ function pendant_drop_analysis(folder, needleGauge)
     if isKey(gaugeTable, needleGauge)
         default_width = num2str(gaugeTable(needleGauge));
     else
-        default_width = '1000';
+        default_width = '0';
     end
 
     % Get physical needle width with larger font
     prompt = {'\fontsize{12}Enter actual needle width (microns):'};
     dims = [1 100];
     opts.Interpreter = 'tex';
-    needle_width_microns = str2double(inputdlg(prompt, 'Needle Width', dims, {'1000'}, opts));
+    needle_width_microns = str2double(inputdlg(prompt, 'Needle Width', dims, {default_width}, opts));
     if isempty(needle_width_microns)
         return
     end
