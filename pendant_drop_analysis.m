@@ -13,12 +13,16 @@
 % =========================================================
 
 %%
-function pendant_drop_analysis(folder, needleGauge)
+function pendant_drop_analysis(folder, needleGauge, density_liquid, density_surrounding)
     if nargin < 1 || isempty(folder)
         folder = uigetdir('Select folder containing .tif images');
         if folder == 0
             return
         end
+    end
+    if nargin < 3
+        density_liquid = 998;
+        density_surrounding = 1.04;
     end
     
     % Get list of .tif files
@@ -28,19 +32,7 @@ function pendant_drop_analysis(folder, needleGauge)
         return
     end
     
-    % Get material properties from user with larger font
-    prompt = {'\fontsize{12}Enter liquid density[kg/m³]. Default shown for DI-water @25C', '\fontsize{12}Enter Air density [kg/m³]. Default shown for air in Boulder, CO'};
-    dlgtitle = 'Material Properties';
-    dims = [1 90]; % Made dialog box wider
-    definput = {'998', '1.04'}; % Default values for water and air
-    opts.Interpreter = 'tex'; % Enable tex interpreter for font size
-    props = inputdlg(prompt, dlgtitle, dims, definput, opts);
-    if isempty(props)
-        return
-    end
-    
-    density_liquid = str2double(props{1});
-    density_surrounding = str2double(props{2});
+  
   % density_difference = density_liquid - density_surrounding;
   % Calculated in the surface_tension_calculation function later on
     
@@ -146,24 +138,17 @@ function pendant_drop_analysis(folder, needleGauge)
         end
     end
     
-    gaugeTable = containers.Map( ...
+   gaugeTable = containers.Map( ...
     {14,15,16,17,18,19,20,21,22,23,24,25,26,27,28}, ...
     {2108,1829,1651,1473,1270,1067,908,819,718,641,566,514,464,413,362});
     
     if isKey(gaugeTable, needleGauge)
-        default_width = num2str(gaugeTable(needleGauge));
+        needle_width_microns = gaugeTable(needleGauge);
     else
-        default_width = '0';
-    end
-
-    % Get physical needle width with larger font
-    prompt = {'\fontsize{12}Enter actual needle width (microns):'};
-    dims = [1 100];
-    opts.Interpreter = 'tex';
-    needle_width_microns = str2double(inputdlg(prompt, 'Needle Width', dims, {default_width}, opts));
-    if isempty(needle_width_microns)
+        errordlg('Unknown needle gauge — add it to the gauge table.', 'Gauge Error');
         return
     end
+
     
     % Calculate scaling factor (microns/pixel)
  %   scale_factor = needle_width_microns / needle_width_pixels;
