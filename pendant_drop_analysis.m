@@ -13,11 +13,16 @@
 % =========================================================
 
 %%
-function pendant_drop_analysis()
-    % Get directory containing .tif images
-    folder = uigetdir('Select folder containing .tif images');
-    if folder == 0
-        return
+function pendant_drop_analysis(folder, needleGauge, density_liquid, density_surrounding)
+    if nargin < 1 || isempty(folder)
+        folder = uigetdir('Select folder containing .tif images');
+        if folder == 0
+            return
+        end
+    end
+    if nargin < 3
+        density_liquid = 998;
+        density_surrounding = 1.04;
     end
     
     % Get list of .tif files
@@ -27,19 +32,7 @@ function pendant_drop_analysis()
         return
     end
     
-    % Get material properties from user with larger font
-    prompt = {'\fontsize{12}Enter liquid density[kg/m³]. Default shown for DI-water @25C', '\fontsize{12}Enter Air density [kg/m³]. Default shown for air in Boulder, CO'};
-    dlgtitle = 'Material Properties';
-    dims = [1 90]; % Made dialog box wider
-    definput = {'998', '1.04'}; % Default values for water and air
-    opts.Interpreter = 'tex'; % Enable tex interpreter for font size
-    props = inputdlg(prompt, dlgtitle, dims, definput, opts);
-    if isempty(props)
-        return
-    end
-    
-    density_liquid = str2double(props{1});
-    density_surrounding = str2double(props{2});
+  
   % density_difference = density_liquid - density_surrounding;
   % Calculated in the surface_tension_calculation function later on
     
@@ -67,92 +60,91 @@ function pendant_drop_analysis()
         'Pointer', 'crosshair');
 %fig.PointerMode
 
-    function [x, y] = customPointSelect(fig)
-
-    % Set up crosshair cursor
-    set(fig, 'Pointer', 'crosshair');
-
-    % Wait for mouse click
-    waitforbuttonpress;
-    cp = get(gca, 'CurrentPoint');
-    x = cp(1,1);
-    y = cp(1,2);
-    end
+    
     
     imshow(img);
-    title('Zoom if needed, then press any key to continue');
-    zoom on; % Enable zoom
-   
+    title('Scroll to zoom. Click to place, then press Confirm.');
+    set(fig, 'WindowScrollWheelFcn', @scrollZoom);
     
    % waitforbuttonpress;
     
-    % Get meniscus start point with confirmation
-    while true
-        title('Click where the meniscus starts');
-       % [x_meniscus, y_meniscus] = ginput(1);
-       [x_meniscus, y_meniscus] = customPointSelect(fig);
-        hold on;
-        
-        % Delete previous line if it exists
-        delete(findobj(gca, 'Tag', 'MeniscusLine'));
-        
-        % Draw horizontal green line
-        hLine = line([1 size(img,2)], [y_meniscus y_meniscus], ...
-            'Color', 'g', 'LineWidth', 2, 'Tag', 'MeniscusLine');
-        plot(x_meniscus, y_meniscus, 'g+', 'MarkerSize', 10);
-        
-        % Ask for confirmation
-        choice = questdlg('Is this meniscus position correct?', ...
-            'Confirm Meniscus Position', ...
-            'Yes', 'No', 'Yes');
-        if strcmp(choice, 'Yes')
-            break;
-        else
-            delete(findobj(gca, 'Type', 'line'));
-        end
-    end
-    
-    % Get needle width points with confirmation
-    while true
+    % Get meniscus start point — click to position, button to confirm
+hold on;
+y_meniscus = size(img, 1) / 2; % default starting position
+title('Click to set meniscus line. Press Confirm when satisfied.');
 
-       title('Click first point for needle width measurement');
-       % [x1, y1] = ginput(1);
-       [x1, y1] = customPointSelect(fig);
-        plot(x1, y1, 'r+', 'MarkerSize', 10); % Mark first point
-        
-        title('Click second point for needle width measurement');
-        %[x2, y2] = ginput(1);
-        [x2, y2] = customPointSelect(fig);
-        
-        % Delete previous line if it exists
-        delete(findobj(gca, 'Tag', 'NeedleLine'));
-        
-        % Draw line between points
-        NeedleLine = line([x1 x2], [y1 y2], ...
-            'Color', 'r', 'LineWidth', 2, 'Tag', 'NeedleLine');
-        plot(x2, y2, 'r+', 'MarkerSize', 10);
-        
-        % Ask for confirmation
-        choice = questdlg('Are these needle width points correct?', ...
-            'Confirm Needle Width Points', ...
-            'Yes', 'No', 'Yes');
-        if strcmp(choice, 'Yes')
-            needle_width_pixels = abs(x2 - x1);
-            break;
-        else
-            delete(findobj(gca, 'Type', 'line'));
-            delete(findobj(gca, 'Type', 'point'));
-        end
+hMeniscusBtn = uicontrol('Style', 'pushbutton', 'String', 'Confirm Meniscus', ...
+    'Units', 'normalized', 'Position', [0.35 0.01 0.3 0.05], ...
+    'Callback', @(~,~) uiresume(fig));
+
+set(fig, 'WindowButtonDownFcn', @onMeniscusClick);
+uiwait(fig);
+set(fig, 'WindowButtonDownFcn', '');
+delete(hMeniscusBtn);
+
+function onMeniscusClick(~, ~)
+    % Only block clicks on UI buttons, not on the image/axes
+    if isa(fig.CurrentObject, 'matlab.ui.control.UIControl')
+        return;
     end
+    cp = get(gca, 'CurrentPoint');
+    y_meniscus = cp(1, 2);
+    delete(findobj(gca, 'Tag', 'MeniscusLine'));
+    line([1 size(img,2)], [y_meniscus y_meniscus], ...
+        'Color', 'g', 'LineWidth', 2, 'Tag', 'MeniscusLine');
+    plot(cp(1,1), y_meniscus, 'g+', 'MarkerSize', 10, 'Tag', 'MeniscusLine');
+    title('Click to reposition, or press Confirm Meniscus.');
+end
     
-    % Get physical needle width with larger font
-    prompt = {'\fontsize{12}Enter actual needle width (microns):'};
-    dims = [1 100];
-    opts.Interpreter = 'tex';
-    needle_width_microns = str2double(inputdlg(prompt, 'Needle Width', dims, {'1000'}, opts));
-    if isempty(needle_width_microns)
+    % Get needle width — alternating clicks set point 1 then point 2, button confirms
+x1 = NaN; y1 = NaN; x2 = NaN; y2 = NaN;
+needleClickCount = 0;
+title('Click left edge of needle, then right edge. Press Confirm when satisfied.');
+
+hNeedleBtn = uicontrol('Style', 'pushbutton', 'String', 'Confirm Needle Width', ...
+    'Units', 'normalized', 'Position', [0.35 0.01 0.3 0.05], ...
+    'Callback', @(~,~) uiresume(fig));
+
+set(fig, 'WindowButtonDownFcn', @onNeedleClick);
+uiwait(fig);
+set(fig, 'WindowButtonDownFcn', '');
+delete(hNeedleBtn);
+needle_width_pixels = abs(x2 - x1);
+close(fig);
+
+function onNeedleClick(~, ~)
+    % Only block clicks on UI buttons, not on the image/axes
+    if isa(fig.CurrentObject, 'matlab.ui.control.UIControl')
+        return;
+    end
+    cp = get(gca, 'CurrentPoint');
+    needleClickCount = needleClickCount + 1;
+    if mod(needleClickCount, 2) == 1   % Odd click → point 1
+        x1 = cp(1,1); y1 = cp(1,2);
+        delete(findobj(gca, 'Tag', 'NeedleLine'));
+        plot(x1, y1, 'r+', 'MarkerSize', 10, 'Tag', 'NeedleLine');
+        title('Now click the second (right) edge of the needle.');
+    else                                % Even click → point 2
+        x2 = cp(1,1); y2 = cp(1,2);
+        delete(findobj(gca, 'Tag', 'NeedleLine'));
+        plot(x1, y1, 'r+', 'MarkerSize', 10, 'Tag', 'NeedleLine');
+        plot(x2, y2, 'r+', 'MarkerSize', 10, 'Tag', 'NeedleLine');
+        line([x1 x2], [y1 y2], 'Color', 'r', 'LineWidth', 2, 'Tag', 'NeedleLine');
+        title(sprintf('Width: %.1f px. Click to redo, or press Confirm Needle Width.', abs(x2-x1)));
+    end
+end
+    
+   gaugeTable = containers.Map( ...
+    {14,15,16,17,18,19,20,21,22,23,24,25,26,27,28}, ...
+    {2108,1829,1651,1473,1270,1067,908,819,718,641,566,514,464,413,362});
+    
+    if isKey(gaugeTable, needleGauge)
+        needle_width_microns = gaugeTable(needleGauge);
+    else
+        errordlg('Unknown needle gauge — add it to the gauge table.', 'Gauge Error');
         return
     end
+
     
     % Calculate scaling factor (microns/pixel)
  %   scale_factor = needle_width_microns / needle_width_pixels;
@@ -263,6 +255,16 @@ function pendant_drop_analysis()
     % fprintf('\nResults saved to:\n');
     % fprintf('CSV file: %s\n', csv_filename);
     % fprintf('MAT file: %s\n', mat_filename);
+    function scrollZoom(~, event)
+    ax = gca;
+    cp = get(ax, 'CurrentPoint');
+    xc = cp(1,1); yc = cp(1,2);
+    xl = get(ax, 'XLim');
+    yl = get(ax, 'YLim');
+    factor = 1.1 ^ event.VerticalScrollCount; % >1 zooms out, <1 zooms in
+    set(ax, 'XLim', xc + (xl - xc) * factor, ...
+            'YLim', yc + (yl - yc) * factor);
+end
 end
 
 % function [x_profile, y_profile] = extract_drop_profile(edges, scale_factor)
